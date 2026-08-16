@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<learning_registry version="1.1">
+  <meta>
+    <generated>2026-08-16</generated>
+    <description>Registry of learning antipatterns focused on anti-theft protocol, provenance tracking, and sensory tool (Objects/Summary/Expand) misuse. Numbers are experimental defaults — require empirical tuning.</description>
+    <sources>
+      <source id="sung_y14" type="transcript" trust="HIGH">Justin Sung Y14 (recognition ≠ generation)</source>
+      <source id="sung_y05" type="transcript" trust="HIGH">Justin Sung Y05 (layman's first = familiarity)</source>
+      <source id="inferred" type="product_decision" trust="MEDIUM">Derived from tool design sessions</source>
+    </sources>
+  </meta>
+
+  <!-- ======================== BEHAVIOR PATTERNS ======================== -->
+  <behavior_patterns>
+
+    <behavior id="bp_passive_consumption_after_sensory">
+      <title>Passive consumption after sensory scaffold</title>
+      <description>Ученик использовал Objects/Summary/Expand, но не сделал ни одной самостоятельной encoding-операции (grouping, relation, explanation, reconstruction). Familiarity не переходит в mastery.</description>
+      <scope>
+        <phases>priming, source_contact, encoding</phases>
+        <sensory_subtypes>identify_key_terms, familiarity_scaffold, neighborhood_expansion</sensory_subtypes>
+      </scope>
+      <risk_refs>
+        <risk_ref>r_recognition_as_mastery</risk_ref>
+        <risk_ref>r_theft_of_understanding</risk_ref>
+      </risk_refs>
+      <intervention_refs>
+        <intervention_ref>i_force_encoding</intervention_ref>
+      </intervention_refs>
+      <evidence_refs>
+        <evidence_ref>sung_y14</evidence_ref>
+        <evidence_ref>sung_y05</evidence_ref>
+      </evidence_refs>
+      <detection>
+        <condition operator="all">
+          <metric name="sensory_input_count" since="last_independent_attempt" operator="gte" parameter_ref="pol_sensory_threshold"/>
+          <metric name="independent_encoding_count" since="last_sensory_input" operator="eq" value="0"/>
+          <metric name="time_since_last_sensory_min" operator="gte" value="5"/>
+        </condition>
+      </detection>
+      <severity>warning</severity>
+    </behavior>
+
+    <behavior id="bp_expand_without_nucleus">
+      <title>Expand without specified nucleus</title>
+      <description>Ученик использовал Expand (Ctrl+W) без указания ядра непонимания. Это "размытое расширение окрестности" — нарушает принцип Neighborhood Expander (расширение вокруг конкретного ядра, не вокруг всего текста).</description>
+      <scope>
+        <sensory_subtypes>neighborhood_expansion</sensory_subtypes>
+      </scope>
+      <risk_refs>
+        <risk_ref>r_blurred_context</risk_ref>
+      </risk_refs>
+      <intervention_refs>
+        <intervention_ref>i_require_nucleus</intervention_ref>
+      </intervention_refs>
+      <evidence_refs>
+        <evidence_ref>inferred</evidence_ref>
+      </evidence_refs>
+      <detection>
+        <condition operator="all">
+          <metric name="expand_invocations" since="session_start" operator="gte" value="1"/>
+          <metric name="nucleus_specified" operator="eq" value="false"/>
+        </condition>
+      </detection>
+      <severity>warning</severity>
+    </behavior>
+
+    <behavior id="bp_answer_theft">
+      <title>AI-generated answer persisted as learner-owned</title>
+      <description>AI дал direct_answer / full_solution / structure_reveal, и результат был сохранён как learner-owned evidence без subsequent independent reconstruction. Критическое нарушение anti-theft protocol.</description>
+      <scope>
+        <phases>encoding, gap_remediation</phases>
+        <help_levels>structure_reveal, direct_answer, full_solution</help_levels>
+      </scope>
+      <risk_refs>
+        <risk_ref>r_theft_of_understanding</risk_ref>
+        <risk_ref>r_authorship_violation</risk_ref>
+      </risk_refs>
+      <intervention_refs>
+        <intervention_ref>i_require_reconstruction</intervention_ref>
+        <intervention_ref>i_delayed_verification</intervention_ref>
+      </intervention_refs>
+      <evidence_refs>
+        <evidence_ref>sung_y14</evidence_ref>
+      </evidence_refs>
+      <detection>
+        <condition operator="all">
+          <metric name="ai_contaminated_artifact_saved" operator="eq" value="true"/>
+          <metric name="independent_reattempt_count" since="contamination_event" operator="eq" value="0"/>
+        </condition>
+      </detection>
+      <severity>critical</severity>
+    </behavior>
+
+    <behavior id="bp_recognition_mistaken_for_recall">
+      <title>Recognition mistaken for recall</title>
+      <description>Ученик "понял" после того, как AI показал структуру или ответ, но не может сгенерировать это самостоятельно с изменённым cue. Прямая цитата Sung: "Just because you recognize the answer does not mean you would be able to generate it."</description>
+      <scope>
+        <phases>retrieval, assessment</phases>
+      </scope>
+      <risk_refs>
+        <risk_ref>r_recognition_as_mastery</risk_ref>
+      </risk_refs>
+      <intervention_refs>
+        <intervention_ref>i_varied_cue_retrieval</intervention_ref>
+      </intervention_refs>
+      <evidence_refs>
+        <evidence_ref>sung_y14</evidence_ref>
+      </evidence_refs>
+      <detection>
+        <condition operator="all">
+          <metric name="correct_with_visible_answer" operator="gte" value="1"/>
+          <metric name="correct_with_hidden_answer" since="last_visible" operator="eq" value="0"/>
+        </condition>
+      </detection>
+      <severity>warning</severity>
+    </behavior>
+
+    <behavior id="bp_cramming_before_deadline">
+      <title>Cramming before deadline</title>
+      <description>Массовое потребление sensory scaffolds + отсутствие encoding/retrieval за 48 часов до deadline. Типичный паттерн考前突击.</description>
+      <scope>
+        <phases>any</phases>
+        <time_window>48h_before_deadline</time_window>
+      </scope>
+      <risk_refs>
+        <risk_ref>r_shallow_retention</risk_ref>
+      </risk_refs>
+      <intervention_refs>
+        <intervention_ref>i_triage_and_reconstruct</intervention_ref>
+      </intervention_refs>
+      <evidence_refs>
+        <evidence_ref>inferred</evidence_ref>
+      </evidence_refs>
+      <detection>
+        <condition operator="all">
+          <metric name="hours_until_deadline" operator="lte" value="48"/>
+          <metric name="sensory_input_count_24h" operator="gte" value="10"/>
+          <metric name="encoding_operations_24h" operator="lte" value="2"/>
+        </condition>
+      </detection>
+      <severity>warning</severity>
+    </behavior>
+
+  </behavior_patterns>
+
+  <!-- ======================== RISKS ======================== -->
+  <risks>
+
+    <risk id="r_theft_of_understanding">
+      <title>Theft of understanding</title>
+      <description>AI выполняет когнитивную операцию вместо ученика. Ученик получает recognition, но не recall. Знание не становится learner-owned.</description>
+      <severity>critical</severity>
+    </risk>
+
+    <risk id="r_recognition_as_mastery">
+      <title>Recognition mistaken for mastery</title>
+      <description>Система или ученик принимает узнавание за понимание. Mastery фиксируется ложно, delayed retrieval проваливается.</description>
+      <severity>high</severity>
+    </risk>
+
+    <risk id="r_authorship_violation">
+      <title>Authorship violation</title>
+      <description>AI-артефакт сохраняется как learner-owned evidence. Загрязняет learner model, искажает next-step policy.</description>
+      <severity>critical</severity>
+    </risk>
+
+    <risk id="r_blurred_context">
+      <title>Blurred context expansion</title>
+      <description>Expand без nucleus даёт размытый контекст, не помогает понять конкретное ядро. Трата когнитивного ресурса впустую.</description>
+      <severity>medium</severity>
+    </risk>
+
+    <risk id="r_shallow_retention">
+      <title>Shallow retention from cramming</title>
+      <description>Кратковременное узнавание без deep processing ведёт к быстрому забыванию через 1-2 недели.</description>
+      <severity>high</severity>
+    </risk>
+
+  </risks>
+
+  <!-- ======================== INTERVENTIONS ======================== -->
+  <interventions>
+
+    <intervention id="i_force_encoding">
+      <title>Force encoding operation</title>
+      <description>Потребовать от ученика выполнить одну из learner-owned операций: grouping, relation, explanation, reconstruction. Блокировать дальнейший sensory input до выполнения.</description>
+      <type>process_only</type>
+      <message>Ты получил familiarity scaffold, но не сделал ни одной самостоятельной операции. Попробуй сам сгруппировать или связать эти концепты.</message>
+      <requires_operation>learner_encoding</requires_operation>
+    </intervention>
+
+    <intervention id="i_require_nucleus">
+      <title>Require nucleus for expand</title>
+      <description>Перед Expand потребовать указать конкретное ядро непонимания (1-3 слова или короткую фразу).</description>
+      <type>blocking</type>
+      <message>Укажи конкретное ядро непонимания перед расширением окрестности.</message>
+    </intervention>
+
+    <intervention id="i_require_reconstruction">
+      <title>Require independent reconstruction</title>
+      <description>После AI-загрязнения (structure_reveal / direct_answer / full_solution) потребовать самостоятельную реконструкцию без подсказки.</description>
+      <type>mandatory</type>
+      <message>Этот ответ был дан AI. Чтобы он стал твоим знанием, реконструируй его сам без подсказки.</message>
+      <requires_operation>independent_reconstruction</requires_operation>
+    </intervention>
+
+    <intervention id="i_delayed_verification">
+      <title>Delayed verification</title>
+      <description>Назначить delayed retrieval через N дней для подтверждения mastery после provisional closure.</description>
+      <type>scheduling</type>
+      <message>Provisional mastery зафиксирована. Delayed retrieval назначен через 3 дня.</message>
+      <scheduling_parameter>pol_delayed_retrieval_days</scheduling_parameter>
+    </intervention>
+
+    <intervention id="i_varied_cue_retrieval">
+      <title>Varied cue retrieval</title>
+      <description>Повторная проверка с изменённым cue, чтобы исключить узнавание и проверить реальную генерацию.</description>
+      <type>verification</type>
+      <message>Ты узнал ответ с подсказкой. Попробуй сгенерировать его с другого ракурса.</message>
+      <requires_operation>varied_cue_attempt</requires_operation>
+    </intervention>
+
+    <intervention id="i_triage_and_reconstruct">
+      <title>Triage and reconstruct (cramming mode)</title>
+      <description>При cramming: выбрать top-3 концепта по utility/risk, провести через полный encoding cycle вместо поверхностного покрытия.</description>
+      <type>triage</type>
+      <message>До deadline 48 часов. Давай выберем 3 самых важных концепта и проработаем их глубоко, вместо поверхностного пробега.</message>
+    </intervention>
+
+  </interventions>
+
+  <!-- ======================== POLICY PARAMETERS ======================== -->
+  <policy_parameters>
+
+    <parameter id="pol_sensory_threshold" type="integer" default="3" min="1" max="10">
+      <description>Сколько sensory input подряд без encoding запускает detection passive_consumption.</description>
+    </parameter>
+
+    <parameter id="pol_delayed_retrieval_days" type="integer" default="3" min="1" max="14">
+      <description>Интервал для delayed verification после provisional mastery.</description>
+    </parameter>
+
+    <parameter id="pol_independent_attempts_before_hint" type="integer" default="2" min="1" max="5">
+      <description>Сколько materially distinct неудачных попыток должен сделать ученик, прежде чем AI может дать content_cue.</description>
+    </parameter>
+
+    <parameter id="pol_expand_min_nucleus_chars" type="integer" default="3" min="1" max="50">
+      <description>Минимальная длина nucleus для валидного Expand.</description>
+    </parameter>
+
+    <parameter id="pol_cramming_hours_threshold" type="integer" default="48" min="12" max="168">
+      <description>За сколько часов до deadline начинается cramming-detection.</description>
+    </parameter>
+
+    <parameter id="pol_familiarity_only_max_per_session" type="integer" default="5" min="1" max="20">
+      <description>Максимум familiarity-only sensory input за одну сессию без обязательной encoding операции.</description>
+    </parameter>
+
+    <parameter id="pol_contamination_cooldown_hours" type="integer" default="24" min="1" max="168">
+      <description>Минимальное время между contamination event и eligible delayed verification.</description>
+    </parameter>
+
+  </policy_parameters>
+
+  <!-- ======================== EVIDENCE RECORDS ======================== -->
+  <evidence_records>
+
+    <evidence id="sung_y14_recognition">
+      <source>sung_y14</source>
+      <timestamp>1:01:19–1:05:19</timestamp>
+      <quote>Just because you recognize and the answer makes sense to you does not in any way mean you would be able to generate that answer.</quote>
+      <status>DIRECT</status>
+      <confidence>HIGH</confidence>
+    </evidence>
+
+    <evidence id="sung_y05_layman">
+      <source>sung_y05</source>
+      <timestamp>estimated early section</timestamp>
+      <quote>Taking the time to learn something in layman's terms first dramatically improves your ability to learn and understand this new topic.</quote>
+      <status>DIRECT</status>
+      <confidence>HIGH</confidence>
+    </evidence>
+
+    <evidence id="inferred_provenance">
+      <source>inferred</source>
+      <timestamp>2026-08-16</timestamp>
+      <description>Provenance &amp; Contamination Tracker design — product decision based on Sung's anti-answer-machine philosophy and explicit boundary: AI may scaffold, learner must encode.</description>
+      <status>PRODUCT_DECISION</status>
+      <confidence>MEDIUM</confidence>
+    </evidence>
+
+  </evidence_records>
+
+</learning_registry>

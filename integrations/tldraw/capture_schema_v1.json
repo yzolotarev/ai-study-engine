@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Study Canvas Capture v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "captured_at",
+    "document",
+    "screenshot",
+    "shapes",
+    "bindings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "study-canvas-capture/v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "captured_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "shape_count",
+        "binding_count"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": ["string", "null"]
+        },
+        "shape_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "binding_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "screenshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "sha256",
+        "bytes",
+        "width",
+        "height",
+        "capture_mode"
+      ],
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        },
+        "width": {
+          "type": ["number", "null"]
+        },
+        "height": {
+          "type": ["number", "null"]
+        },
+        "capture_mode": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "shapes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "type",
+          "x",
+          "y",
+          "rotation",
+          "bounds",
+          "props"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": ["string", "null"]
+          },
+          "x": {
+            "type": ["number", "null"]
+          },
+          "y": {
+            "type": ["number", "null"]
+          },
+          "rotation": {
+            "type": ["number", "null"]
+          },
+          "bounds": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["x", "y", "w", "h"],
+                "properties": {
+                  "x": {
+                    "type": ["number", "null"]
+                  },
+                  "y": {
+                    "type": ["number", "null"]
+                  },
+                  "w": {
+                    "type": ["number", "null"]
+                  },
+                  "h": {
+                    "type": ["number", "null"]
+                  }
+                }
+              }
+            ]
+          },
+          "props": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "w": {
+                "type": ["string", "number", "boolean", "null"]
+              },
+              "h": {
+                "type": ["string", "number", "boolean", "null"]
+              },
+              "color": {
+                "type": ["string", "number", "boolean", "null"]
+              },
+              "fill": {
+                "type": ["string", "number", "boolean", "null"]
+              },
+              "size": {
+                "type": ["string", "number", "boolean", "null"]
+              },
+              "text": {
+                "type": ["string", "number", "boolean", "null"]
+              },
+              "name": {
+                "type": ["string", "number", "boolean", "null"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "type",
+          "from_id",
+          "to_id"
+        ],
+        "properties": {
+          "id": {
+            "type": ["string", "null"]
+          },
+          "type": {
+            "type": ["string", "null"]
+          },
+          "from_id": {
+            "type": ["string", "null"]
+          },
+          "to_id": {
+            "type": ["string", "null"]
+          }
+        }
+      }
+    }
+  }
+}

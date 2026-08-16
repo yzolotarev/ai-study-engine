@@ -1,0 +1,48 @@
+# --- dependencies / build ---
+node_modules/
+dist/
+
+# --- local study state (NEVER publish) ---
+.study-engine/*.sqlite
+.study-engine/*.sqlite3
+.study-engine/*.db
+.study-engine/tape.json
+.study-engine/config.local.json
+
+# --- runtime artifacts (NEVER publish) ---
+*.log
+latest_capture.json
+latest_manifest.json
+latest_screenshot.*
+latest_transcription.json
+runs/
+derived-runs/
+
+# --- models / binaries (user installs separately) ---
+*.gguf
+*.bin
+*.AppImage
+
+# --- secrets / local env ---
+.env
+.env.*
+!.env.example
+
+# --- python ---
+__pycache__/
+*.pyc
+
+# --- OS ---
+.DS_Store
+
+# --- local development artifacts (NOT part of the public release) ---
+ai-study-engine.md
+ai-study-engine-full.md
+*.srt
+study-engine.db
+.pi/
+scripts/
+tools/
+run-study-start.ts
+run-study-start-complex.ts
+*.log

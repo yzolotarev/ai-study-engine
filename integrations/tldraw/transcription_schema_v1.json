@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Study Canvas Transcription v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "capture_sha256",
+    "texts",
+    "objects",
+    "visual_marks",
+    "visible_symbols",
+    "perceptual_uncertainty"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "study-canvas-transcription/v1"
+    },
+    "capture_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "texts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "text", "alternatives", "confidence"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "text": {"type": ["string", "null"]},
+          "alternatives": {"type": "array", "items": {"type": "string"}},
+          "location": {"type": ["string", "null"]},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+        }
+      }
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "description", "confidence"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "description": {"type": "string"},
+          "location": {"type": ["string", "null"]},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+        }
+      }
+    },
+    "visual_marks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "description", "arrowhead_visible", "confidence"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "kind": {
+            "type": "string",
+            "enum": [
+              "line", "arrow", "underline", "double_line", "thick_line",
+              "circle", "boundary", "strikeout", "doodle", "other"
+            ]
+          },
+          "description": {"type": "string"},
+          "from_visual_ref": {"type": ["string", "null"]},
+          "to_visual_ref": {"type": ["string", "null"]},
+          "arrowhead_visible": {"type": "boolean"},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+        }
+      }
+    },
+    "visible_symbols": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "confidence"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "kind": {
+            "type": "string",
+            "enum": ["question_mark", "exclamation", "math", "other"]
+          },
+          "near_visual_ref": {"type": ["string", "null"]},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+        }
+      }
+    },
+    "perceptual_uncertainty": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_ref", "description"],
+        "properties": {
+          "source_ref": {"type": ["string", "null"]},
+          "description": {"type": "string"}
+        }
+      }
+    }
+  }
+}

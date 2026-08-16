@@ -1,0 +1,7 @@
+{
+  "captureCoreDir": "/absolute/path/to/ai-study-engine/integrations/tldraw",
+  "transcribeDir": "/absolute/path/to/ai-study-engine/integrations/tldraw",
+  "captureCmd": ["python3", "capture.py"],
+  "transcribeCmd": ["python3", "transcribe.py"],
+  "model": "ggml-org/gemma-4-E2B-it-GGUF:Q4_0"
+}

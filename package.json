@@ -1,0 +1,45 @@
+{
+  "name": "ai-study-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first Pi study engine based on evidence-constrained Justin Sung principles",
+  "type": "module",
+  "keywords": [
+    "pi-package",
+    "learning",
+    "study-engine"
+  ],
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/**/*.test.ts",
+    "check": "npm run typecheck && npm test",
+    "study": "node --import tsx study-cli.ts"
+  },
+  "pi": {
+    "extensions": [
+      "./extensions/study-engine/index.ts"
+    ],
+    "skills": [
+      "./skills"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "^0.84.1",
+    "@earendil-works/pi-coding-agent": "^0.84.1",
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.0",
+    "typebox": "^1.0.0",
+    "typescript": "^5.9.0"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.34.52"
+  }
+}
