@@ -1,5 +1,5 @@
 import { evaluateCompletion } from "../completion-policy.js";
-import { isIndependentEvidence } from "../evidence-validity.js";
+import { isIndependentEvidence, isNovelTransfer } from "../evidence-validity.js";
 import type { HarnessProjection, NextAction } from "../types.js";
 
 export function selectHarnessNext(state: HarnessProjection): NextAction {
@@ -40,7 +40,7 @@ export function selectHarnessNext(state: HarnessProjection): NextAction {
         return { stage: "delayed_retrieval", targetId: target.id, instruction: `A second independent retrieval must occur no earlier than ${new Date(dueAtMs).toISOString()}.` };
       }
     } else {
-      const transfer = Object.values(state.attempts).find((attempt) => attempt.kind === "transfer" && attempt.targetIds.includes(target.id) && isIndependentEvidence(attempt));
+      const transfer = Object.values(state.attempts).find((attempt) => attempt.targetIds.includes(target.id) && isNovelTransfer(attempt, retrieval));
       if (!transfer) return { stage: "transfer", targetId: target.id, instruction: "Attempt a materially novel transfer task without help." };
     }
   }

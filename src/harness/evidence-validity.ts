@@ -50,6 +50,13 @@ export function isIndependentEvidence(attempt: ProjectedAttempt): boolean {
     && attempt.assessment?.allMet === true;
 }
 
+export function isNovelTransfer(transfer: ProjectedAttempt, retrieval: ProjectedAttempt): boolean {
+  return transfer.kind === "transfer"
+    && isIndependentEvidence(transfer)
+    && transfer.prompt.trim() !== retrieval.prompt.trim()
+    && transfer.artifact?.content.trim() !== retrieval.artifact?.content.trim();
+}
+
 export function elapsedDays(fromIso: string, toIso: string): number {
   return (Date.parse(toIso) - Date.parse(fromIso)) / 86_400_000;
 }

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  BUILTIN_ADAPTERS,
   HARNESS_SCHEMA_VERSION,
   MemoryHarnessRepository,
   StudyHarness,
@@ -68,6 +69,15 @@ function assessedAttempt(
   return { attemptId: begun.attemptId, state };
 }
 
+test("all required deterministic subject adapters are available", () => {
+  assert.deepEqual(Object.keys(BUILTIN_ADAPTERS), ["general", "history", "law", "economics"]);
+  for (const adapter of Object.values(BUILTIN_ADAPTERS)) {
+    const targets = adapter.defineTargets({ capability: "Explain", targetTask: "Apply", successCriteria: "Accurate", subject: adapter.subject });
+    assert.ok(targets.length > 0);
+    assert.ok(targets.every((target) => target.criteria.length > 0));
+  }
+});
+
 test("history acceptance: confirmation -> failed baseline -> gap -> remediation -> retrieval -> transfer -> completion", () => {
   const { harness, sessionId, target, time } = fixture();
   time.advance(1_000);
@@ -128,6 +138,17 @@ test("AI/shared artifacts never become learner evidence", () => {
     assert.equal(attempt.state.attempts[attempt.attemptId]?.assessment, undefined);
     assert.equal(harness.complete(sessionId).recorded, false);
   }
+});
+
+test("a caller-labelled transfer must still differ from retrieval prompt and artifact", () => {
+  const { harness, sessionId, target } = fixture();
+  assessedAttempt(harness, sessionId, target, "baseline");
+  const retrieval = assessedAttempt(harness, sessionId, target, "retrieval");
+  const retrievalPrompt = retrieval.state.attempts[retrieval.attemptId]?.prompt;
+  assessedAttempt(harness, sessionId, target, "transfer", artifactText());
+  const transfer = Object.values(harness.status(sessionId).projection.attempts).find((item) => item.kind === "transfer");
+  assert.notEqual(transfer?.prompt, retrievalPrompt, "runtime supplies a domain transfer prompt");
+  assert.equal(harness.complete(sessionId).recorded, false, "identical artifact is not novel transfer evidence");
 });
 
 test("retentionDays requires actual elapsed time; transfer cannot substitute", () => {

@@ -1,5 +1,5 @@
 import { fingerprint } from "./fingerprints.js";
-import { elapsedDays, isIndependentEvidence } from "./evidence-validity.js";
+import { elapsedDays, isIndependentEvidence, isNovelTransfer } from "./evidence-validity.js";
 import type { CompletionDecision, HarnessProjection, ProjectedAttempt } from "./types.js";
 
 function covers(attempt: ProjectedAttempt, targetId: string): boolean {
@@ -38,7 +38,7 @@ export function evaluateCompletion(state: HarnessProjection): CompletionDecision
       && elapsedDays(primary.assessment?.assessedAt ?? primary.startedAt, attempt.startedAt) >= requiredDelay,
     );
     const transfer = attempts.find((attempt) =>
-      attempt.kind === "transfer" && covers(attempt, target.id) && isIndependentEvidence(attempt),
+      covers(attempt, target.id) && isNovelTransfer(attempt, primary),
     );
 
     if (state.goal?.retentionDays !== undefined) {
