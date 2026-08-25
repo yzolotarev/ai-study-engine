@@ -1,6 +1,6 @@
 {
   "name": "ai-study-engine",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Local-first Pi study engine based on evidence-constrained Justin Sung principles",
   "type": "module",
@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test tests/**/*.test.ts",
     "check": "npm run typecheck && npm test",
-    "study": "node --import tsx study-cli.ts"
+    "study": "node --import tsx study-cli.ts",
+    "harness": "node --import tsx harness-cli.ts"
   },
   "pi": {
     "extensions": [
