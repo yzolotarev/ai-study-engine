@@ -584,6 +584,8 @@ export class StudyStore {
     studySessionId?: string;
     attemptBranchId: string;
     parentEventId?: string;
+    eventId?: string;
+    schemaVersion?: number;
     type: string;
     payload: unknown;
     actor: "user" | "engine" | "ai" | "human_reviewer";
@@ -591,7 +593,8 @@ export class StudyStore {
     occurredAt?: string;
   }): string {
     assertProvenance(input.provenance);
-    const id = randomUUID();
+    const id = input.eventId ?? randomUUID();
+    const schemaVersion = input.schemaVersion ?? 1;
     const timestamp = input.occurredAt ?? now();
     const payloadJson = JSON.stringify(input.payload);
     const provenanceJson = JSON.stringify(input.provenance);
@@ -606,7 +609,7 @@ export class StudyStore {
           `INSERT INTO domain_events(
              id, user_id, study_session_id, attempt_branch_id, parent_event_id,
              event_type, schema_version, payload_json, actor, provenance_json, created_at
-           ) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .run(
           id,
@@ -615,6 +618,7 @@ export class StudyStore {
           input.attemptBranchId,
           input.parentEventId ?? null,
           input.type,
+          schemaVersion,
           payloadJson,
           input.actor,
           provenanceJson,
@@ -627,13 +631,14 @@ export class StudyStore {
              payload_json, payload_hash, integrity_status, actor, provenance_json,
              occurred_at, recorded_at, causation_event_id, correlation_id,
              legacy_domain_event_id
-           ) VALUES (?, ?, ?, ?, 1, ?, ?, 'verified', ?, ?, ?, ?, ?, ?, ?)`,
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, 'verified', ?, ?, ?, ?, ?, ?, ?)`,
         )
         .run(
           id,
           input.userId,
           input.studySessionId ?? null,
           input.type,
+          schemaVersion,
           payloadJson,
           payloadHash,
           input.actor,
