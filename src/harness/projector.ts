@@ -80,6 +80,10 @@ export function projectHarness(events: readonly HarnessEvent[]): HarnessProjecti
       continue;
     }
     eventIds.add(event.eventId);
+    if (event.schemaVersion !== 2) {
+      anomaly(anomalies, event, "UNSUPPORTED_SCHEMA", `schema version ${String(event.schemaVersion)} is not supported`);
+      continue;
+    }
     const occurredAtMs = Date.parse(event.occurredAt);
     if (!Number.isFinite(occurredAtMs)) {
       anomaly(anomalies, event, "INVALID_TIME", "occurredAt is not an ISO-compatible timestamp");
@@ -138,14 +142,17 @@ export function projectHarness(events: readonly HarnessEvent[]): HarnessProjecti
           break;
         }
         const ids = new Set<string>();
+        const globalCriterionIds = new Set<string>();
         let valid = true;
         for (const target of event.payload.targets) {
           const criterionIds = new Set(target.criteria.map((criterion) => criterion.id));
           if (!target.id.trim() || !target.description.trim() || ids.has(target.id) || target.criteria.length === 0
-            || criterionIds.size !== target.criteria.length || target.criteria.some((criterion) => !criterion.id.trim() || !criterion.description.trim())) {
+            || criterionIds.size !== target.criteria.length || target.criteria.some((criterion) =>
+              !criterion.id.trim() || !criterion.description.trim() || globalCriterionIds.has(criterion.id))) {
             valid = false;
           }
           ids.add(target.id);
+          for (const criterion of target.criteria) globalCriterionIds.add(criterion.id);
         }
         if (!valid) {
           anomaly(anomalies, event, "INVALID_TARGETS", "targets and criteria require unique non-empty ids and descriptions");
@@ -169,12 +176,16 @@ export function projectHarness(events: readonly HarnessEvent[]): HarnessProjecti
           break;
         }
         const targetAttempts = Object.values(attempts).filter((attempt) => attempt.targetIds.some((id) => event.payload.targetIds.includes(id)));
-        if (event.payload.kind === "baseline" && targetAttempts.some((attempt) => attempt.kind === "baseline")) {
-          anomaly(anomalies, event, "DUPLICATE_BASELINE", "a target may have only one baseline");
+        if (event.payload.kind === "baseline" && targetAttempts.some((attempt) =>
+          attempt.kind === "baseline" && !attempt.contaminated && attempt.assessment)) {
+          anomaly(anomalies, event, "DUPLICATE_BASELINE", "a target may have only one clean assessed baseline");
           break;
         }
-        if (event.payload.kind !== "baseline" && !targetAttempts.some((attempt) => attempt.kind === "baseline" && attempt.assessment)) {
-          anomaly(anomalies, event, "BASELINE_REQUIRED", "non-baseline evidence requires an assessed baseline first");
+        const hasBaselineForEveryTarget = event.payload.targetIds.every((targetId) => Object.values(attempts).some((attempt) =>
+          attempt.kind === "baseline" && attempt.targetIds.includes(targetId) && !attempt.contaminated
+            && attempt.artifact?.author === "learner" && attempt.assessment));
+        if (event.payload.kind !== "baseline" && !hasBaselineForEveryTarget) {
+          anomaly(anomalies, event, "BASELINE_REQUIRED", "non-baseline evidence requires a clean assessed baseline for every target");
           break;
         }
         attempts[event.payload.attemptId] = {
@@ -210,8 +221,10 @@ export function projectHarness(events: readonly HarnessEvent[]): HarnessProjecti
       }
       case "harness.artifact.submitted": {
         const attempt = attempts[event.payload.attemptId];
-        if (!attempt || attempt.artifact || !event.payload.artifactId.trim() || !event.payload.content.trim()) {
-          anomaly(anomalies, event, "INVALID_SUBMISSION", "submission requires a known open attempt and non-empty artifact");
+        const actorMatchesAuthor = (event.payload.author === "learner" && event.actor === "learner")
+          || (event.payload.author !== "learner" && event.actor !== "learner");
+        if (!attempt || attempt.artifact || !actorMatchesAuthor || !event.payload.artifactId.trim() || !event.payload.content.trim()) {
+          anomaly(anomalies, event, "INVALID_SUBMISSION", "submission requires matching actor/authorship, a known open attempt, and non-empty artifact");
           break;
         }
         attempt.artifact = {

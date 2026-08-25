@@ -19,8 +19,21 @@ export function evaluateCompletion(state: HarnessProjection): CompletionDecision
   if (openGaps.length > 0) reasons.push(`${openGaps.length} gap(s) remain open`);
 
   for (const target of targets) {
-    const baseline = attempts.find((attempt) => attempt.kind === "baseline" && covers(attempt, target.id) && attempt.assessment);
-    if (!baseline) reasons.push(`target ${target.id} has no assessed baseline`);
+    const baseline = attempts.find((attempt) => attempt.kind === "baseline" && covers(attempt, target.id)
+      && !attempt.contaminated && attempt.artifact?.author === "learner" && attempt.assessment);
+    if (!baseline) {
+      reasons.push(`target ${target.id} has no clean assessed baseline`);
+    } else {
+      for (const criterion of target.criteria) {
+        if (baseline.assessment?.criteria[criterion.id]?.met === false) {
+          const gap = Object.values(state.gaps).find((candidate) =>
+            candidate.attemptId === baseline.id && candidate.targetId === target.id && candidate.criterionId === criterion.id,
+          );
+          if (!gap) reasons.push(`target ${target.id} has undiagnosed baseline failure ${criterion.id}`);
+          else if (!gap.resolvedAt) reasons.push(`baseline gap ${gap.id} is unresolved`);
+        }
+      }
+    }
 
     const cleanRetrievals = attempts
       .filter((attempt) => attempt.kind === "retrieval" && covers(attempt, target.id) && isIndependentEvidence(attempt))

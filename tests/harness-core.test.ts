@@ -109,6 +109,19 @@ test("baseline is required but never counts as mastery", () => {
   assert.ok(status.completion.reasons.some((reason) => reason.includes("independent passing retrieval")));
 });
 
+test("a contaminated baseline does not satisfy the prerequisite and can be repeated cleanly", () => {
+  const { harness, sessionId, target } = fixture();
+  const dirty = harness.beginAttempt(sessionId, { kind: "baseline", targetIds: [target.id] });
+  harness.help(sessionId, "Use the Depression as your answer.", "answer", dirty.attemptId);
+  harness.submit(sessionId, dirty.attemptId, artifactText());
+  harness.assess(sessionId, dirty.attemptId, assessment(target, artifactText()));
+  const rejected = harness.beginAttempt(sessionId, { kind: "retrieval", targetIds: [target.id] });
+  assert.equal(rejected.projection.attempts[rejected.attemptId], undefined);
+  assert.equal(rejected.projection.anomalies.at(-1)?.code, "BASELINE_REQUIRED");
+  const clean = harness.beginAttempt(sessionId, { kind: "baseline", targetIds: [target.id] });
+  assert.ok(clean.projection.attempts[clean.attemptId]);
+});
+
 test("literal artifact quotes are mandatory for every positive criterion", () => {
   const { harness, sessionId, target } = fixture();
   const begun = harness.beginAttempt(sessionId, { kind: "baseline", targetIds: [target.id] });
@@ -117,6 +130,16 @@ test("literal artifact quotes are mandatory for every positive criterion", () =>
   const state = harness.assess(sessionId, begun.attemptId, bogus);
   assert.equal(state.attempts[begun.attemptId]?.assessment, undefined);
   assert.ok(state.anomalies.some((item) => item.code === "INVALID_ASSESSMENT"));
+});
+
+test("failed baseline criteria cannot be skipped without diagnosis and closure", () => {
+  const { harness, sessionId, target } = fixture();
+  assessedAttempt(harness, sessionId, target, "baseline", artifactText(), 1);
+  assessedAttempt(harness, sessionId, target, "retrieval");
+  assessedAttempt(harness, sessionId, target, "transfer", "chronology novel; evidence novel; causes novel");
+  const completion = harness.complete(sessionId);
+  assert.equal(completion.recorded, false);
+  assert.ok(completion.decision.reasons.some((reason) => reason.includes("undiagnosed baseline failure")));
 });
 
 test("substantive help contaminates the active attempt", () => {

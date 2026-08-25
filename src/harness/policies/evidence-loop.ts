@@ -9,7 +9,8 @@ export function selectHarnessNext(state: HarnessProjection): NextAction {
   if (targets.length === 0) return { stage: "targets", instruction: "Generate or define a non-empty rubric and target set." };
 
   for (const target of targets) {
-    const baseline = Object.values(state.attempts).find((attempt) => attempt.kind === "baseline" && attempt.targetIds.includes(target.id) && attempt.assessment);
+    const baseline = Object.values(state.attempts).find((attempt) => attempt.kind === "baseline" && attempt.targetIds.includes(target.id)
+      && !attempt.contaminated && attempt.artifact?.author === "learner" && attempt.assessment);
     if (!baseline) return { stage: "baseline", targetId: target.id, instruction: `Begin an unassisted baseline for ${target.description}.` };
     for (const criterion of target.criteria) {
       if (baseline.assessment?.criteria[criterion.id]?.met === false
