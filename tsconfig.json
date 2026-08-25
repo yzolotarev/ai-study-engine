@@ -12,6 +12,6 @@
     "types": ["node"],
     "outDir": "dist"
   },
-  "include": ["src/**/*.ts", "extensions/**/*.ts", "tests/**/*.ts"],
+  "include": ["src/**/*.ts", "extensions/**/*.ts", "tests/**/*.ts", "harness-cli.ts"],
   "exclude": ["node_modules", "dist"]
 }
