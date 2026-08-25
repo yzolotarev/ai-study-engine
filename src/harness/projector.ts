@@ -59,6 +59,7 @@ export function projectHarness(events: readonly HarnessEvent[]): HarnessProjecti
   const gaps: Record<string, MutableGap> = {};
   const anomalies: AuditAnomaly[] = [];
   const eventIds = new Set<string>();
+  let lastOccurredAt = Number.NEGATIVE_INFINITY;
 
   const snapshot = (): HarnessProjection => ({
     ...(sessionId ? { sessionId } : {}),
@@ -79,10 +80,16 @@ export function projectHarness(events: readonly HarnessEvent[]): HarnessProjecti
       continue;
     }
     eventIds.add(event.eventId);
-    if (!Number.isFinite(Date.parse(event.occurredAt))) {
+    const occurredAtMs = Date.parse(event.occurredAt);
+    if (!Number.isFinite(occurredAtMs)) {
       anomaly(anomalies, event, "INVALID_TIME", "occurredAt is not an ISO-compatible timestamp");
       continue;
     }
+    if (occurredAtMs < lastOccurredAt) {
+      anomaly(anomalies, event, "OUT_OF_ORDER_TIME", "ledger timestamps must not move backwards");
+      continue;
+    }
+    lastOccurredAt = occurredAtMs;
     if (sessionId && event.sessionId !== sessionId) {
       anomaly(anomalies, event, "SESSION_MISMATCH", `expected ${sessionId}`);
       continue;
@@ -95,7 +102,8 @@ export function projectHarness(events: readonly HarnessEvent[]): HarnessProjecti
           break;
         }
         const { goal: proposed, learnerId: proposedLearner } = event.payload;
-        if (!proposedLearner.trim() || !proposed.capability.trim() || !proposed.targetTask.trim() || !proposed.successCriteria.trim()) {
+        if (event.actor !== "engine" || !["general", "history", "law", "economics"].includes(proposed.subject)
+          || !proposedLearner.trim() || !proposed.capability.trim() || !proposed.targetTask.trim() || !proposed.successCriteria.trim()) {
           anomaly(anomalies, event, "INVALID_GOAL", "goal and learner fields must be non-empty");
           break;
         }
@@ -121,8 +129,8 @@ export function projectHarness(events: readonly HarnessEvent[]): HarnessProjecti
         break;
       }
       case "harness.targets.defined": {
-        if (!goalConfirmedAt || Object.keys(targets).length > 0) {
-          anomaly(anomalies, event, "INVALID_TARGET_ORDER", "targets require confirmation and may be defined once");
+        if (!goalConfirmedAt || Object.keys(targets).length > 0 || !["engine", "human_reviewer"].includes(event.actor)) {
+          anomaly(anomalies, event, "INVALID_TARGET_ORDER", "targets require confirmation, an authorized actor, and may be defined once");
           break;
         }
         if (event.payload.targets.length === 0) {
@@ -147,7 +155,7 @@ export function projectHarness(events: readonly HarnessEvent[]): HarnessProjecti
         break;
       }
       case "harness.attempt.started": {
-        if (!goalConfirmedAt || Object.keys(targets).length === 0 || attempts[event.payload.attemptId]) {
+        if (event.actor !== "engine" || !goalConfirmedAt || Object.keys(targets).length === 0 || attempts[event.payload.attemptId]) {
           anomaly(anomalies, event, "INVALID_ATTEMPT_START", "attempt requires targets and a unique id");
           break;
         }
@@ -221,8 +229,8 @@ export function projectHarness(events: readonly HarnessEvent[]): HarnessProjecti
           break;
         }
         const validation = validateAssessment(attempt.artifact, rubricFor(targets, attempt), event.payload.assessments);
-        if (!validation.valid) {
-          anomaly(anomalies, event, "INVALID_ASSESSMENT", validation.reasons.join("; "));
+        if (!["ai", "human_reviewer"].includes(event.actor) || !validation.valid) {
+          anomaly(anomalies, event, "INVALID_ASSESSMENT", event.actor === "learner" ? "learner cannot assess their own evidence" : validation.reasons.join("; "));
           break;
         }
         attempt.assessment = {
@@ -268,7 +276,7 @@ export function projectHarness(events: readonly HarnessEvent[]): HarnessProjecti
       case "harness.gap.resolved": {
         const gap = gaps[event.payload.gapId];
         const attempt = attempts[event.payload.attemptId];
-        if (!gap || gap.resolvedAt || gap.remediationCount === 0 || !attempt || attempt.kind === "baseline"
+        if (event.actor !== "engine" || !gap || gap.resolvedAt || gap.remediationCount === 0 || !attempt || attempt.kind === "baseline"
           || attempt.contaminated || attempt.artifact?.author !== "learner"
           || attempt.assessment?.criteria[gap.criterionId]?.met !== true
           || Date.parse(attempt.startedAt) <= Date.parse(gap.openedAt)) {
@@ -280,8 +288,8 @@ export function projectHarness(events: readonly HarnessEvent[]): HarnessProjecti
         break;
       }
       case "harness.session.completed": {
-        if (completedAt) {
-          anomaly(anomalies, event, "DUPLICATE_COMPLETION", "session already completed");
+        if (completedAt || event.actor !== "engine") {
+          anomaly(anomalies, event, "DUPLICATE_COMPLETION", "session already completed or actor is unauthorized");
           break;
         }
         const decision = evaluateCompletion(snapshot());
