@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { StudyStore } from "../src/db/store.js";
+import studyEngineExtension from "../extensions/study-engine/index.js";
 import { HARNESS_TOOLS } from "../extensions/study-engine/harness-tools.js";
 
 const expected = [
@@ -18,6 +19,16 @@ test("Pi exposes the complete Harness v2 tool surface without caller evidence fl
       assert.equal(schema.includes(`\"${forbidden}\"`), false, `${tool.name} exposes ${forbidden}`);
     }
   }
+});
+
+test("the packaged Pi extension registers every Harness v2 tool", () => {
+  const names: string[] = [];
+  studyEngineExtension({
+    on() {},
+    registerCommand() {},
+    registerTool(tool: { name: string }) { names.push(tool.name); },
+  } as any);
+  for (const name of expected) assert.ok(names.includes(name), `extension did not register ${name}`);
 });
 
 test("Harness v2 Pi tools persist and replay through SQLite", () => {
