@@ -138,6 +138,8 @@ For the first real manual pilot, use the prepared local files:
 - `docs/evaluation/real-pilot/methodology.learning-vs-performance.v1.pack.json`
 - `docs/evaluation/real-pilot/methodology.learning-vs-performance.v1.coaching.ru.md`
 - `docs/evaluation/real-pilot/methodology.learning-vs-performance.v1.runbook.md`
+- `docs/evaluation/real-pilot/methodology.learning-vs-performance.v2.pack.json` (rotated pack after operator-side prompt disclosure)
+- `docs/evaluation/real-pilot/methodology.learning-vs-performance.v2.runbook.md`
 
 This pack is explicitly marked as a calibration/usability pilot and must not be used as efficacy evidence.
 

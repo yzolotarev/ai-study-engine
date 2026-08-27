@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { mkdtempSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
@@ -17,6 +18,7 @@ import {
 
 const protocolPath = resolve("docs/evaluation/real-pilot/pilot.methodology.usability.v1.protocol.json");
 const packPath = resolve("docs/evaluation/real-pilot/methodology.learning-vs-performance.v1.pack.json");
+const rotatedPackPath = resolve("docs/evaluation/real-pilot/methodology.learning-vs-performance.v2.pack.json");
 
 function clock(start = "2026-01-01T00:00:00.000Z") {
   let ms = Date.parse(start);
@@ -80,6 +82,40 @@ test("real pilot StudyPack validates, imports, and does not start a trial by its
   }).trials[0]!.trialId).trial.status, "planned");
   assert.equal(protocol.metadata.notes?.toLowerCase().includes("calibration/usability pilot"), true);
   assert.equal(pack.metadata.notes?.toLowerCase().includes("calibration/usability pilot"), true);
+});
+
+test("CLI pack validation exposes metadata only and never echoes assessment material", () => {
+  const dir = mkdtempSync(join(tmpdir(), "real-pilot-cli-validation-"));
+  const pack = loadJson(packPath);
+  const output = execFileSync("node", ["--import", "tsx", resolve("evaluation-cli.ts"), "validate-pack", `@${packPath}`], {
+    env: { ...process.env, EVAL_DB: join(dir, "evaluation.sqlite") },
+    encoding: "utf8",
+  });
+  const parsed = JSON.parse(output);
+  assert.equal(parsed.ok, true);
+  assert.equal(parsed.value.packId, pack.packId);
+  assert.equal(parsed.value.assessmentFormCount, 4);
+  for (const secret of [
+    pack.pretestForm.prompt,
+    pack.immediateForm.prompt,
+    pack.transferForm.prompt,
+    pack.delayedForm.prompt,
+    pack.scoringMaterials.scoringGuidance,
+    pack.scoringMaterials.referenceAnswer,
+  ]) {
+    assert.equal(output.includes(secret), false);
+  }
+});
+
+test("rotated v2 StudyPack validates as a fresh calibration pack", () => {
+  const pack = loadJson(rotatedPackPath);
+  const service = new EvaluationService(new EvaluationStore(":memory:"));
+  const validation = service.validateStudyPack(pack);
+  assert.equal(validation.ok, true);
+  assert.equal(pack.packId, "methodology.learning-vs-performance.v2");
+  assert.equal(pack.version, 2);
+  assert.equal(pack.metadata.classification, "calibration-only");
+  assert.equal(new Set([pack.pretestForm.prompt, pack.immediateForm.prompt, pack.transferForm.prompt, pack.delayedForm.prompt]).size, 4);
 });
 
 test("real pilot assessment prompts stay out of the coaching surface before checkpoint open", () => {

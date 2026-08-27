@@ -1,0 +1,101 @@
+{
+  "packId": "methodology.learning-vs-performance.v2",
+  "version": 2,
+  "domain": "learning-methodology",
+  "sourceReferences": [
+    "doi:10.1177/1745691615569000",
+    "doi:10.1111/j.1467-9280.2006.01693.x"
+  ],
+  "matchedSets": [
+    {
+      "matchedSetId": "lp-v2-matched-set-01",
+      "description": "Two surface-distinct scenarios that probe the same meta-skill",
+      "microtopicIds": ["lp-v2-workshop", "lp-v2-clinic"],
+      "equivalenceMetadata": {
+        "rationale": "Both microtopics ask the learner to distinguish temporary success from durable capability and to design a stronger check. The contexts and cues are deliberately different.",
+        "sourceHashes": [
+          "2172bfa496248f59c76fb0571d6287eb3a2d4f6b675e2f0b6d8982123133cc68",
+          "195ecbd50429fad2e3495c648c890b674e417a63c319b342954f6f9261014ff2"
+        ],
+        "matchingDimensions": ["same capability", "same rubric", "different surface setting", "different immediate cues"]
+      }
+    }
+  ],
+  "microtopics": [
+    {
+      "microtopicId": "lp-v2-workshop",
+      "title": "Рабочая мастерская: проверить устойчивость навыка",
+      "goalContract": "По описанию учебной ситуации ученик различает временно хороший результат и устойчивую способность, замечает мешающие факторы и предлагает минимальную чистую проверку через самостоятельную попытку, перенос или отсрочку.",
+      "rubric": [
+        { "id": "LP_DISTINCTION", "description": "Различение текущего выполнения и устойчивой способности позднее или в изменённых условиях" },
+        { "id": "CONFOUND_DETECTION", "description": "Выявление подсказок, повторения, открытого источника и знакомости формы" },
+        { "id": "EVIDENCE_DESIGN", "description": "Проектирование чистой самостоятельной попытки и сильного свидетельства обучения" },
+        { "id": "ADAPTIVE_DECISION", "description": "Выбор следующего шага на основании evidence/gap" }
+      ]
+    },
+    {
+      "microtopicId": "lp-v2-clinic",
+      "title": "Клинический разбор: отделить узнавание от способности",
+      "goalContract": "По описанию учебной ситуации ученик различает успех на знакомой форме и долговременное обучение, находит искажающие факторы и предлагает минимальную проверку с переносом или отсрочкой.",
+      "rubric": [
+        { "id": "LP_DISTINCTION", "description": "Различение текущего выполнения и устойчивой способности позднее или в изменённых условиях" },
+        { "id": "CONFOUND_DETECTION", "description": "Выявление подсказок, повторения, открытого источника и знакомости формы" },
+        { "id": "EVIDENCE_DESIGN", "description": "Проектирование чистой самостоятельной попытки и сильного свидетельства обучения" },
+        { "id": "ADAPTIVE_DECISION", "description": "Выбор следующего шага на основании evidence/gap" }
+      ]
+    }
+  ],
+  "rubric": [
+    { "id": "LP_DISTINCTION", "description": "Различает немедленный результат и устойчивую способность позже или в изменённых условиях" },
+    { "id": "CONFOUND_DETECTION", "description": "Замечает подсказки, повторение, открытый источник и знакомый шаблон как искажающие факторы" },
+    { "id": "EVIDENCE_DESIGN", "description": "Проектирует чистую самостоятельную попытку и сильное свидетельство обучения" },
+    { "id": "ADAPTIVE_DECISION", "description": "Выбирает следующий шаг на основании evidence/gap" }
+  ],
+  "pretestForm": {
+    "formId": "lp-v2-pretest",
+    "title": "Чистый pretest",
+    "prompt": "На тренировке диспетчер аэропорта без ошибок распределяет пять знакомых рейсов после просмотра разбора и таблицы с ответами. Руководитель хочет сразу объявить, что навык освоен. Какие выводы здесь преждевременны, какие обстоятельства могут объяснить успех, и какую короткую следующую проверку ты предложишь?",
+    "artifactType": "text"
+  },
+  "immediateForm": {
+    "formId": "lp-v2-immediate",
+    "title": "Immediate retrieval",
+    "prompt": "Стажёр по пожарной безопасности сразу правильно выбирает действия в знакомой учебной комнате после совместного разбора. Объясни, что именно можно заключить из этого результата, чего заключить нельзя, и как отличить узнавание знакомой схемы от самостоятельной способности.",
+    "artifactType": "text"
+  },
+  "transferForm": {
+    "formId": "lp-v2-transfer",
+    "title": "Transfer test",
+    "prompt": "В финансовом отделе сотрудник безошибочно применяет показанную формулу к тем же числам, а затем получает задачу с другой единицей измерения и неполными исходными данными. Спроектируй проверку, которая покажет перенос способности, и укажи, какие результаты будут недостаточны.",
+    "artifactType": "text"
+  },
+  "delayedForm": {
+    "formId": "lp-v2-delayed",
+    "title": "Delayed retrieval",
+    "prompt": "Спустя двое суток архитектор снова самостоятельно объясняет решение, которое недавно разбирал, но ещё не сталкивался с новым ограничением задачи. Как оценить силу этого свидетельства и какой небольшой следующий шаг проверит, что способность не зависит от прежней формы и подсказок?",
+    "artifactType": "text"
+  },
+  "equivalenceMetadata": {
+    "rationale": "Calibration/usability pilot only; this rotated pack preserves the capability and rubric while replacing every assessment scenario after an operator-side disclosure.",
+    "sourceHashes": [
+      "2172bfa496248f59c76fb0571d6287eb3a2d4f6b675e2f0b6d8982123133cc68",
+      "195ecbd50429fad2e3495c648c890b674e417a63c319b342954f6f9261014ff2"
+    ]
+  },
+  "scoringMaterials": {
+    "scoringGuidance": "Используй только immutable task snapshot, learner artifact и rubric; положительное решение требует буквальной опоры на текст ответа.",
+    "referenceAnswer": "Performance — это наблюдаемый успех сейчас; learning требует чистого воспроизведения позже или переноса в изменённые условия.",
+    "disagreementPolicy": "При расхождении scorers сохранить обе версии и считать критерий unknown до независимого разрешения."
+  },
+  "createdAt": "2026-08-27T00:00:00.000Z",
+  "updatedAt": "2026-08-27T00:00:00.000Z",
+  "metadata": {
+    "schemaVersion": 1,
+    "createdBy": "local-authoring",
+    "classification": "calibration-only",
+    "author": "local-authoring",
+    "reviewer": "pending-domain-review",
+    "changeHistory": ["v2 rotated assessment forms after operator-side disclosure of v1 output"],
+    "notes": "Calibration/usability pilot only; exclude from efficacy comparison. v2 forms are rotated and must remain undisclosed until checkpoint open."
+  }
+}
