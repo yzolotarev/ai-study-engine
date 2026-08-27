@@ -1,8 +1,48 @@
 import { evaluateCompletion } from "../completion-policy.js";
 import { isIndependentEvidence, isNovelTransfer } from "../evidence-validity.js";
-import type { HarnessProjection, NextAction } from "../types.js";
+import { selectHypothesisScaffold } from "./hypothesis-stimulation.js";
+import type { AttemptKind, HarnessProjection, HypothesisScaffold, NextAction } from "../types.js";
+
+function commitScaffold(state: HarnessProjection, targetIds: readonly string[], attemptKind: AttemptKind, attemptId?: string): HypothesisScaffold | undefined {
+  if (!state.goal) return undefined;
+  return selectHypothesisScaffold(state.goal, {
+    phase: "commit",
+    attemptKind,
+    targetIds,
+    ...(attemptId === undefined ? {} : { attemptId }),
+  });
+}
+
+function reviseScaffold(state: HarnessProjection, gapId: string, attemptId: string, targetId: string): HypothesisScaffold | undefined {
+  if (!state.goal) return undefined;
+  return selectHypothesisScaffold(state.goal, {
+    phase: "revise",
+    gapId,
+    attemptId,
+    targetIds: [targetId],
+  });
+}
 
 export function selectHarnessNext(state: HarnessProjection): NextAction {
+  if (state.completedAt) return { stage: "done", instruction: "This session is complete; no further evidence events are accepted." };
+  if (state.anomalies.length > 0) return { stage: "done", instruction: "This session is fail-closed because its journal contains audit anomalies." };
+  const attempts = Object.values(state.attempts);
+  const awaitingSubmission = attempts.find((attempt) => !attempt.artifact);
+  if (awaitingSubmission) {
+    const scaffold = awaitingSubmission.kind === "baseline" || awaitingSubmission.kind === "transfer"
+      ? commitScaffold(state, awaitingSubmission.targetIds, awaitingSubmission.kind, awaitingSubmission.id)
+      : undefined;
+    return {
+      stage: "submit",
+      attemptId: awaitingSubmission.id,
+      instruction: "The learner must submit their artifact for the active attempt.",
+      ...(scaffold === undefined ? {} : { hypothesisScaffold: scaffold }),
+    };
+  }
+  const awaitingAssessment = attempts.find((attempt) => attempt.artifact?.author === "learner" && !attempt.assessment);
+  if (awaitingAssessment) {
+    return { stage: "assess", attemptId: awaitingAssessment.id, instruction: "Assess every rubric criterion using literal learner-artifact quotes." };
+  }
   if (!state.goal) return { stage: "goal", instruction: "Start with an observable learner goal." };
   if (!state.goalConfirmedAt) return { stage: "confirm", instruction: "Ask the learner to explicitly confirm the goal contract." };
   const targets = Object.values(state.targets);
@@ -11,7 +51,15 @@ export function selectHarnessNext(state: HarnessProjection): NextAction {
   for (const target of targets) {
     const baseline = Object.values(state.attempts).find((attempt) => attempt.kind === "baseline" && attempt.targetIds.includes(target.id)
       && !attempt.contaminated && attempt.artifact?.author === "learner" && attempt.assessment);
-    if (!baseline) return { stage: "baseline", targetId: target.id, instruction: `Begin an unassisted baseline for ${target.description}.` };
+    if (!baseline) {
+      const scaffold = commitScaffold(state, [target.id], "baseline");
+      return {
+        stage: "baseline",
+        targetId: target.id,
+        instruction: `Begin an unassisted baseline for ${target.description}.`,
+        ...(scaffold === undefined ? {} : { hypothesisScaffold: scaffold }),
+      };
+    }
     for (const criterion of target.criteria) {
       if (baseline.assessment?.criteria[criterion.id]?.met === false
         && !Object.values(state.gaps).some((gap) => gap.attemptId === baseline.id && gap.criterionId === criterion.id)) {
@@ -23,7 +71,14 @@ export function selectHarnessNext(state: HarnessProjection): NextAction {
   const openGap = Object.values(state.gaps).find((gap) => !gap.resolvedAt);
   if (openGap) {
     if (openGap.remediationCount === 0) {
-      return { stage: "remediate", targetId: openGap.targetId, gapId: openGap.id, instruction: "Provide the smallest intervention that addresses this gap, then remove help." };
+      const scaffold = reviseScaffold(state, openGap.id, openGap.attemptId, openGap.targetId);
+      return {
+        stage: "remediate",
+        targetId: openGap.targetId,
+        gapId: openGap.id,
+        instruction: "Invite a learner model revision before providing remediation; then provide the smallest intervention.",
+        ...(scaffold === undefined ? {} : { hypothesisScaffold: scaffold }),
+      };
     }
     return { stage: "reattempt", targetId: openGap.targetId, gapId: openGap.id, instruction: "Begin a fresh independent retrieval attempt for this gap." };
   }
@@ -42,7 +97,15 @@ export function selectHarnessNext(state: HarnessProjection): NextAction {
       }
     } else {
       const transfer = Object.values(state.attempts).find((attempt) => attempt.targetIds.includes(target.id) && isNovelTransfer(attempt, retrieval));
-      if (!transfer) return { stage: "transfer", targetId: target.id, instruction: "Attempt a materially novel transfer task without help." };
+      if (!transfer) {
+      const scaffold = commitScaffold(state, [target.id], "transfer");
+      return {
+        stage: "transfer",
+        targetId: target.id,
+        instruction: "Attempt a materially novel transfer task without help.",
+        ...(scaffold === undefined ? {} : { hypothesisScaffold: scaffold }),
+      };
+    }
     }
   }
 

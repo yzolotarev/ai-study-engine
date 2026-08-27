@@ -13,7 +13,7 @@ v0.2 adds Study Harness v2 **beside** the v0.1 engine. It does not delete, rewri
 
 - `npm run harness -- ...` drives the deterministic v2 loop.
 - Pi exposes `study_v2_*` tools separately from legacy `study_*` tools.
-- v2 writes only `harness.*` events (schema version 2) to the existing append-only event ledger.
+- Hardened v2 writes only `harness.*` events (schema version 3) to the existing append-only event ledger. Pre-hardening schema-v2 Harness streams are explicitly unverified and cannot prove mastery.
 - v2 state and completion are reconstructed from those events; mutable legacy state is not consulted.
 
 ## Important semantic changes
@@ -25,6 +25,7 @@ v0.2 adds Study Harness v2 **beside** the v0.1 engine. It does not delete, rewri
 | Assessment JSON shape can be sufficient | Every positive criterion requires literal learner-artifact quotes |
 | Transfer or caller-marked delay | Transfer is accepted only when retention is unspecified; delay is elapsed time between clean retrievals |
 | Invalid command sequence may fail at a mutable-state boundary | Invalid v2 events remain replayable audit anomalies and do not become evidence |
+| AI asks for a prediction | Optional Hypothesis Stimulation scaffold asks the learner to commit before feedback; it is not persisted evidence or a completion requirement |
 
 ## Adoption
 

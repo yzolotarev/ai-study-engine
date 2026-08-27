@@ -12,6 +12,7 @@ export function evaluateCompletion(state: HarnessProjection): CompletionDecision
   const targets = Object.values(state.targets);
   const attempts = Object.values(state.attempts);
 
+  if (state.anomalies.length > 0) reasons.push(`${state.anomalies.length} audit anomaly/anomalies block completion`);
   if (!state.goal) reasons.push("goal is missing");
   if (!state.goalConfirmedAt) reasons.push("learner confirmation is missing");
   if (targets.length === 0) reasons.push("target set is empty");

@@ -3,9 +3,10 @@ import test from "node:test";
 import { StudyStore } from "../src/db/store.js";
 import studyEngineExtension from "../extensions/study-engine/index.js";
 import { HARNESS_TOOLS } from "../extensions/study-engine/harness-tools.js";
+import { SQLiteHarnessRepository, StudyHarness, TrustedLearnerIngress } from "../src/harness/index.js";
 
 const expected = [
-  "study_v2_start", "study_v2_confirm", "study_v2_targets", "study_v2_next",
+  "study_v2_start", "study_v2_request_learner_input", "study_v2_targets", "study_v2_next",
   "study_v2_begin_attempt", "study_v2_submit", "study_v2_assess", "study_v2_gap",
   "study_v2_remediate", "study_v2_help", "study_v2_status", "study_v2_complete",
 ];
@@ -42,7 +43,8 @@ test("Harness v2 Pi tools persist and replay through SQLite", () => {
     learnerId: "pi-learner", subject: "law", capability: "Apply negligence",
     targetTask: "Analyze a novel fact pattern", successCriteria: "Issue, rule, application, counterargument",
   });
-  call("study_v2_confirm", { sessionId: started.sessionId, confirmation: "confirmed" });
+  // Learner confirmation is a trusted local ingress, not an AI-callable tool.
+  new TrustedLearnerIngress(new StudyHarness(new SQLiteHarnessRepository(store))).confirmGoal(started.sessionId, "confirmed");
   call("study_v2_targets", { sessionId: started.sessionId });
   const next = call("study_v2_next", { sessionId: started.sessionId });
   assert.equal(next.stage, "baseline");

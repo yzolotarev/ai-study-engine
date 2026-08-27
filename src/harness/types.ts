@@ -1,10 +1,31 @@
-export const HARNESS_SCHEMA_VERSION = 2 as const;
+export const HARNESS_SCHEMA_VERSION = 3 as const;
+export const PRE_HARDENING_SCHEMA_VERSION = 2 as const;
 
 export type HarnessActor = "learner" | "engine" | "ai" | "human_reviewer";
 export type Subject = "general" | "history" | "law" | "economics";
 export type AttemptKind = "baseline" | "retrieval" | "transfer";
 export type ArtifactAuthor = "learner" | "ai" | "shared";
 export type HelpKind = "process_prompt" | "content_hint" | "worked_example" | "answer";
+export type HypothesisMode = "prediction" | "mechanism" | "causal" | "contrast" | "boundary" | "method-selection";
+
+export interface HypothesisScaffold {
+  readonly phase: "commit" | "revise";
+  readonly mode: HypothesisMode;
+  readonly question: string;
+  readonly responseFrame: readonly string[];
+  readonly targetIds: readonly string[];
+  readonly gapId?: string;
+  readonly attemptId?: string;
+  readonly disclosurePolicy: "commit-before-feedback";
+}
+
+export interface HypothesisScaffoldRequest {
+  readonly phase: HypothesisScaffold["phase"];
+  readonly mode: HypothesisMode;
+  readonly targetIds: readonly string[];
+  readonly gapId?: string;
+  readonly attemptId?: string;
+}
 
 export interface GoalInput {
   readonly capability: string;
@@ -114,6 +135,7 @@ export interface ProjectedGap {
   readonly diagnosis: string;
   readonly openedAt: string;
   readonly remediationCount: number;
+  readonly lastRemediatedAt?: string;
   readonly resolvedByAttemptId?: string;
   readonly resolvedAt?: string;
 }
@@ -139,8 +161,11 @@ export interface CompletionDecision {
 }
 
 export interface NextAction {
-  readonly stage: "goal" | "confirm" | "targets" | "baseline" | "diagnose" | "remediate" | "reattempt" | "transfer" | "delayed_retrieval" | "complete" | "done";
+  readonly stage: "goal" | "confirm" | "targets" | "baseline" | "submit" | "assess" | "diagnose" | "remediate" | "reattempt" | "transfer" | "delayed_retrieval" | "complete" | "done";
   readonly instruction: string;
   readonly targetId?: string;
   readonly gapId?: string;
+  readonly attemptId?: string;
+  /** Optional policy scaffold; it is not an event, evidence, or completion input. */
+  readonly hypothesisScaffold?: HypothesisScaffold;
 }

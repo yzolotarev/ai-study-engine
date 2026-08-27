@@ -5,6 +5,7 @@ import {
   HARNESS_SCHEMA_VERSION,
   MemoryHarnessRepository,
   StudyHarness,
+  TrustedLearnerIngress,
   evaluateCompletion,
   projectHarness,
   type CriterionAssessmentInput,
@@ -34,7 +35,7 @@ function fixture(retentionDays?: number) {
     subject: "history",
     ...(retentionDays === undefined ? {} : { retentionDays }),
   });
-  harness.confirm(started.sessionId, "Yes, this is my goal");
+  new TrustedLearnerIngress(harness).confirmGoal(started.sessionId, "Yes, this is my goal");
   const state = harness.defineTargets(started.sessionId);
   const target = Object.values(state.targets)[0];
   assert.ok(target);
@@ -64,7 +65,8 @@ function assessedAttempt(
   author: "learner" | "ai" | "shared" = "learner",
 ) {
   const begun = harness.beginAttempt(sessionId, { kind, targetIds: [target.id] });
-  harness.submit(sessionId, begun.attemptId, content, author);
+  if (author === "learner") new TrustedLearnerIngress(harness).submitArtifact(sessionId, begun.attemptId, content);
+  else harness.recordArtifact(sessionId, begun.attemptId, content, author);
   const state = harness.assess(sessionId, begun.attemptId, assessment(target, content, failedIndex));
   return { attemptId: begun.attemptId, state };
 }
@@ -113,11 +115,9 @@ test("a contaminated baseline does not satisfy the prerequisite and can be repea
   const { harness, sessionId, target } = fixture();
   const dirty = harness.beginAttempt(sessionId, { kind: "baseline", targetIds: [target.id] });
   harness.help(sessionId, "Use the Depression as your answer.", "answer", dirty.attemptId);
-  harness.submit(sessionId, dirty.attemptId, artifactText());
+  new TrustedLearnerIngress(harness).submitArtifact(sessionId, dirty.attemptId, artifactText());
   harness.assess(sessionId, dirty.attemptId, assessment(target, artifactText()));
-  const rejected = harness.beginAttempt(sessionId, { kind: "retrieval", targetIds: [target.id] });
-  assert.equal(rejected.projection.attempts[rejected.attemptId], undefined);
-  assert.equal(rejected.projection.anomalies.at(-1)?.code, "BASELINE_REQUIRED");
+  assert.throws(() => harness.beginAttempt(sessionId, { kind: "retrieval", targetIds: [target.id] }), /BASELINE_REQUIRED/);
   const clean = harness.beginAttempt(sessionId, { kind: "baseline", targetIds: [target.id] });
   assert.ok(clean.projection.attempts[clean.attemptId]);
 });
@@ -125,17 +125,18 @@ test("a contaminated baseline does not satisfy the prerequisite and can be repea
 test("literal artifact quotes are mandatory for every positive criterion", () => {
   const { harness, sessionId, target } = fixture();
   const begun = harness.beginAttempt(sessionId, { kind: "baseline", targetIds: [target.id] });
-  harness.submit(sessionId, begun.attemptId, artifactText());
+  new TrustedLearnerIngress(harness).submitArtifact(sessionId, begun.attemptId, artifactText());
   const bogus = target.criteria.map((criterion) => ({ criterionId: criterion.id, met: true, quotes: ["not in learner artifact"] }));
-  const state = harness.assess(sessionId, begun.attemptId, bogus);
-  assert.equal(state.attempts[begun.attemptId]?.assessment, undefined);
-  assert.ok(state.anomalies.some((item) => item.code === "INVALID_ASSESSMENT"));
+  assert.throws(() => harness.assess(sessionId, begun.attemptId, bogus), /INVALID_ASSESSMENT/);
+  assert.equal(harness.status(sessionId).projection.attempts[begun.attemptId]?.assessment, undefined);
 });
 
 test("failed baseline criteria cannot be skipped without diagnosis and closure", () => {
-  const { harness, sessionId, target } = fixture();
+  const { harness, sessionId, target, time } = fixture();
   assessedAttempt(harness, sessionId, target, "baseline", artifactText(), 1);
+  time.advance(1_000);
   assessedAttempt(harness, sessionId, target, "retrieval");
+  time.advance(1_000);
   assessedAttempt(harness, sessionId, target, "transfer", "chronology novel; evidence novel; causes novel");
   const completion = harness.complete(sessionId);
   assert.equal(completion.recorded, false);
@@ -147,7 +148,7 @@ test("substantive help contaminates the active attempt", () => {
   assessedAttempt(harness, sessionId, target, "baseline");
   const begun = harness.beginAttempt(sessionId, { kind: "retrieval", targetIds: [target.id] });
   harness.help(sessionId, "The key causal answer is the Depression.", "content_hint", begun.attemptId);
-  harness.submit(sessionId, begun.attemptId, artifactText());
+  new TrustedLearnerIngress(harness).submitArtifact(sessionId, begun.attemptId, artifactText());
   const state = harness.assess(sessionId, begun.attemptId, assessment(target, artifactText()));
   assert.equal(state.attempts[begun.attemptId]?.contaminated, true);
   assert.equal(evaluateCompletion(state).complete, false);
@@ -157,17 +158,20 @@ test("AI/shared artifacts never become learner evidence", () => {
   for (const author of ["ai", "shared"] as const) {
     const { harness, sessionId, target } = fixture();
     assessedAttempt(harness, sessionId, target, "baseline");
-    const attempt = assessedAttempt(harness, sessionId, target, "retrieval", artifactText(), undefined, author);
-    assert.equal(attempt.state.attempts[attempt.attemptId]?.assessment, undefined);
+    const begun = harness.beginAttempt(sessionId, { kind: "retrieval", targetIds: [target.id] });
+    harness.recordArtifact(sessionId, begun.attemptId, artifactText(), author);
+    assert.throws(() => harness.assess(sessionId, begun.attemptId, assessment(target, artifactText())), /INVALID_ASSESSMENT/);
     assert.equal(harness.complete(sessionId).recorded, false);
   }
 });
 
 test("a caller-labelled transfer must still differ from retrieval prompt and artifact", () => {
-  const { harness, sessionId, target } = fixture();
+  const { harness, sessionId, target, time } = fixture();
   assessedAttempt(harness, sessionId, target, "baseline");
+  time.advance(1_000);
   const retrieval = assessedAttempt(harness, sessionId, target, "retrieval");
   const retrievalPrompt = retrieval.state.attempts[retrieval.attemptId]?.prompt;
+  time.advance(1_000);
   assessedAttempt(harness, sessionId, target, "transfer", artifactText());
   const transfer = Object.values(harness.status(sessionId).projection.attempts).find((item) => item.kind === "transfer");
   assert.notEqual(transfer?.prompt, retrievalPrompt, "runtime supplies a domain transfer prompt");

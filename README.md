@@ -47,6 +47,8 @@ Goal
 - Pi extension + separate legacy and Harness v2 CLIs
 - Pure event replay with fail-closed audit anomalies
 - Deterministic adapters for general, history, law, and economics
+- Optional Hypothesis Stimulation scaffolds for prediction, comparison, and model revision before feedback
+- Separate Learning Evaluation Layer v0 for reproducible local N-of-1 experiments
 - Deterministic tests and CI
 
 ## Current status
@@ -131,6 +133,11 @@ Goal → Confirm → Targets → Baseline → Gap → Remediation
      → Independent retrieval → Transfer / delayed retrieval → Completion
 ```
 
+At baseline and transfer, `next` may include a non-persisted hypothesis scaffold:
+commit a prediction and its basis before feedback, then compare and revise the
+model. It is optional policy guidance, not mastery evidence or a completion
+requirement.
+
 List commands:
 
 ```bash
@@ -195,6 +202,20 @@ npm run study -- start-live "<capability>" "<targetTask>" "<successCriteria>"
 npm run study -- status <sessionId>
 npm run study -- next <sessionId>
 ```
+
+### Learning Evaluation Layer v0
+
+The evaluation layer is a separate local sidecar for reproducible measurement experiments.
+It does **not** prove learning and does **not** alter Harness mastery semantics.
+
+- Docs: [Learning Evaluation Layer v0](docs/learning-evaluation-layer-v0.md)
+- Target state: [AI Study Engine — Ideal State](docs/ideal-state.md)
+- CLI: `npm run evaluate -- --help`
+- Synthetic smoke check: `npm run evaluate -- smoke-fixture`
+- Full 64-cell synthetic boundary benchmark: `npm run evaluate -- synthetic-benchmark`
+- Local integrity/backup: `npm run evaluate -- integrity-check` and `backup <path>`
+- Opt-in encrypted backup: `EVAL_BACKUP_PASSPHRASE='…' npm run evaluate -- backup-encrypted <path>`
+- Explicit deletion: `npm run evaluate -- delete-participant <id> --confirm 'DELETE <id>'`
 
 ### Optional tldraw workflow
 

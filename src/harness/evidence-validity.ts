@@ -28,12 +28,12 @@ export function validateAssessment(
       reasons.push(`duplicate criterion ${item.criterionId}`);
       continue;
     }
-    const literalQuotes = item.quotes.filter((quote) => quote.length > 0 && artifact?.content.includes(quote));
+    const literalQuotes = item.quotes.filter((quote) => hasMeaningfulText(quote) && artifact?.content.includes(quote));
     if (item.met && literalQuotes.length === 0) {
-      reasons.push(`criterion ${item.criterionId} has no literal supporting quote`);
+      reasons.push(`criterion ${item.criterionId} has no meaningful literal supporting quote`);
     }
-    if (item.quotes.some((quote) => !artifact?.content.includes(quote))) {
-      reasons.push(`criterion ${item.criterionId} cites text absent from artifact`);
+    if (item.quotes.some((quote) => !hasMeaningfulText(quote) || !artifact?.content.includes(quote))) {
+      reasons.push(`criterion ${item.criterionId} cites empty, punctuation-only, or absent text`);
     }
     criteria[item.criterionId] = { met: item.met, quotes: literalQuotes };
   }
@@ -50,11 +50,56 @@ export function isIndependentEvidence(attempt: ProjectedAttempt): boolean {
     && attempt.assessment?.allMet === true;
 }
 
+export const MAX_NOVELTY_JACCARD = 0.72;
+export const MAX_NOVELTY_CONTAINMENT = 0.85;
+
+export interface TextNovelty {
+  readonly distinct: boolean;
+  readonly normalizedLeft: string;
+  readonly normalizedRight: string;
+  readonly tokenJaccard: number;
+  readonly tokenContainment: number;
+}
+
+export function normalizeForNovelty(value: string): string {
+  return value
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+function hasMeaningfulText(value: string): boolean {
+  return /[\p{L}\p{N}]/u.test(value.normalize("NFKC"));
+}
+
+export function compareTextNovelty(left: string, right: string): TextNovelty {
+  const normalizedLeft = normalizeForNovelty(left);
+  const normalizedRight = normalizeForNovelty(right);
+  const leftTokens = new Set(normalizedLeft.split(" ").filter(Boolean));
+  const rightTokens = new Set(normalizedRight.split(" ").filter(Boolean));
+  const intersection = [...leftTokens].filter((token) => rightTokens.has(token)).length;
+  const union = new Set([...leftTokens, ...rightTokens]).size;
+  const shorter = Math.min(leftTokens.size, rightTokens.size);
+  const tokenJaccard = union === 0 ? 1 : intersection / union;
+  const tokenContainment = shorter === 0 ? 1 : intersection / shorter;
+  const distinct = normalizedLeft.length > 0
+    && normalizedRight.length > 0
+    && normalizedLeft !== normalizedRight
+    && tokenJaccard < MAX_NOVELTY_JACCARD
+    && tokenContainment < MAX_NOVELTY_CONTAINMENT;
+  return { distinct, normalizedLeft, normalizedRight, tokenJaccard, tokenContainment };
+}
+
 export function isNovelTransfer(transfer: ProjectedAttempt, retrieval: ProjectedAttempt): boolean {
+  const retrievalFinishedAt = retrieval.assessment?.assessedAt;
   return transfer.kind === "transfer"
     && isIndependentEvidence(transfer)
-    && transfer.prompt.trim() !== retrieval.prompt.trim()
-    && transfer.artifact?.content.trim() !== retrieval.artifact?.content.trim();
+    && retrievalFinishedAt !== undefined
+    && Date.parse(transfer.startedAt) > Date.parse(retrievalFinishedAt)
+    && compareTextNovelty(transfer.prompt, retrieval.prompt).distinct
+    && compareTextNovelty(transfer.artifact?.content ?? "", retrieval.artifact?.content ?? "").distinct;
 }
 
 export function elapsedDays(fromIso: string, toIso: string): number {

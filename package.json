@@ -17,7 +17,8 @@
     "test": "node --import tsx --test tests/**/*.test.ts",
     "check": "npm run typecheck && npm test",
     "study": "node --import tsx study-cli.ts",
-    "harness": "node --import tsx harness-cli.ts"
+    "harness": "node --import tsx harness-cli.ts",
+    "evaluate": "node --import tsx evaluation-cli.ts"
   },
   "pi": {
     "extensions": [

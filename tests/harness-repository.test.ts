@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { StudyStore } from "../src/db/store.js";
-import { SQLiteHarnessRepository, StudyHarness } from "../src/harness/index.js";
+import { HARNESS_SCHEMA_VERSION, SQLiteHarnessRepository, StudyHarness, TrustedLearnerIngress } from "../src/harness/index.js";
 
 test("SQLite harness repository preserves v2 ids, schema, order, and replays state", () => {
   const store = new StudyStore(":memory:");
@@ -18,7 +18,7 @@ test("SQLite harness repository preserves v2 ids, schema, order, and replays sta
     successCriteria: "Correct model, mechanism, and transfer",
     subject: "economics",
   });
-  harness.confirm(started.sessionId, "confirmed by learner");
+  new TrustedLearnerIngress(harness).confirmGoal(started.sessionId, "confirmed by learner");
   harness.defineTargets(started.sessionId);
 
   const rows = store.db.prepare(
@@ -28,7 +28,7 @@ test("SQLite harness repository preserves v2 ids, schema, order, and replays sta
     event_id: string; schema_version: number; correlation_id: string; legacy_domain_event_id: string;
   }>;
   assert.deepEqual(rows.map((row) => row.event_id), ["sqlite-2", "sqlite-3", "sqlite-4"]);
-  assert.ok(rows.every((row) => row.schema_version === 2));
+  assert.ok(rows.every((row) => row.schema_version === HARNESS_SCHEMA_VERSION));
   assert.ok(rows.every((row) => row.correlation_id === started.sessionId));
   assert.ok(rows.every((row) => row.legacy_domain_event_id === row.event_id));
 
@@ -48,7 +48,15 @@ test("SQLite repository keeps invalid event order as replayable anomaly", () => 
   const { sessionId } = harness.start("learner", {
     capability: "c", targetTask: "t", successCriteria: "s", subject: "general",
   });
-  harness.submit(sessionId, "unknown-attempt", "learner text");
+  repository.append({
+    eventId: "raw-invalid-submission",
+    sessionId,
+    type: "harness.artifact.submitted",
+    schemaVersion: HARNESS_SCHEMA_VERSION,
+    occurredAt: "2026-02-01T00:00:01Z",
+    actor: "learner",
+    payload: { attemptId: "unknown-attempt", artifactId: "raw-artifact", author: "learner", content: "learner text" },
+  });
   const first = harness.status(sessionId).projection;
   const second = harness.status(sessionId).projection;
   assert.deepEqual(first.anomalies, second.anomalies);
