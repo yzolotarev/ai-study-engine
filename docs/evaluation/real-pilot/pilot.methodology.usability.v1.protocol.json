@@ -1,0 +1,72 @@
+{
+  "protocolId": "pilot.methodology.usability.v1",
+  "version": 1,
+  "title": "Methodology readiness / usability pilot",
+  "domain": "learning-methodology",
+  "hypothesis": "A short, local calibration pilot can help a learner distinguish temporary performance from durable learning using clean retrieval, materially distinct transfer, and delayed retrieval with contamination-aware logging.",
+  "primaryOutcome": "quality of evidence design and gap diagnosis",
+  "secondaryOutcomes": [
+    "pretest distinction quality",
+    "confound detection",
+    "clean retry quality",
+    "transfer evidence design",
+    "delayed retrieval readiness"
+  ],
+  "retentionDelayDays": 2,
+  "sessionTimeBudgetMinutes": 10,
+  "policyVariants": [
+    {
+      "policyId": "harness.readiness-hypothesis-gap",
+      "policyVersion": 1,
+      "description": "If the pretest is clean, raise the challenge; if it is weak or contaminated, give only minimal orientation and require a clean reattempt.",
+      "deterministicConfig": {
+        "decisionRule": "gap-sensitive",
+        "orientationLimitMinutes": 3,
+        "remediationLimitMinutes": 3,
+        "transferRequiredWhenPretestPasses": true,
+        "delayedAvailableAfterHours": 48,
+        "pilotMode": "calibration-usability"
+      },
+      "allowedPhases": ["pretest", "immediate", "transfer", "delayed"],
+      "allowedIntents": ["orientation", "minimal_remediation", "clean_retry", "transfer", "delayed_retrieval", "pause", "stop", "completion_check"],
+      "featureFlags": ["calibration-usability-pilot", "no-efficacy-claim"],
+      "runtimeSpec": {
+        "schemaVersion": 1,
+        "readyRule": "all-required-criteria-met",
+        "gapSelection": "first-unmet-or-unknown",
+        "supportMode": "minimal-gap-cue",
+        "gapIntent": "minimal_remediation",
+        "interventionBudget": {
+          "maxDurationMs": 180000,
+          "maxHelpLevel": "process_prompt"
+        },
+        "requiredSequence": {
+          "transferAfterCleanPretest": true,
+          "delayedAfterTransfer": true
+        },
+        "disclosurePolicy": "assessment-isolated",
+        "fallback": "stop"
+      },
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    }
+  ],
+  "topicAssignmentRules": {
+    "method": "seeded-rotation",
+    "counterbalance": "paired-rotation",
+    "lockStartedTrials": true
+  },
+  "allowedArtifactTypes": ["text"],
+  "scorerRequirements": {
+    "requireBlindScoring": true,
+    "allowedScorers": ["trusted-human", "deterministic", "ai-semantic"],
+    "rubricVersion": "rubric-learning-vs-performance-v1"
+  },
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "metadata": {
+    "schemaVersion": 1,
+    "createdBy": "local-authoring",
+    "notes": "Calibration/usability pilot only; exclude from efficacy comparison."
+  }
+}

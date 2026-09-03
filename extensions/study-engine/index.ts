@@ -7,6 +7,7 @@ import { selectNextAction } from "../../src/core/runtime-controller.js";
 import { recommendForState } from "../../src/core/next-step.js";
 import { STUDY_STATES, type HelpLevel, type StudyState, type TransitionEvidence } from "../../src/core/types.js";
 import { StudyStore, type StudySessionView } from "../../src/db/store.js";
+import { HARNESS_TOOLS } from "./harness-tools.js";
 import { STUDY_TOOLS } from "./study-tools.js";
 
 const LOCAL_USER_ID = "local-default";
@@ -368,7 +369,7 @@ export default function studyEngine(pi: ExtensionAPI) {
     },
   });
 
-  STUDY_TOOLS.forEach((tool) => {
+  [...STUDY_TOOLS, ...HARNESS_TOOLS].forEach((tool) => {
     pi.registerTool({
       name: tool.name,
       label: tool.name,

@@ -1,0 +1,101 @@
+{
+  "packId": "methodology.learning-vs-performance.v1",
+  "version": 1,
+  "domain": "learning-methodology",
+  "sourceReferences": [
+    "doi:10.1177/1745691615569000",
+    "doi:10.1111/j.1467-9280.2006.01693.x"
+  ],
+  "matchedSets": [
+    {
+      "matchedSetId": "lp-matched-set-01",
+      "description": "Two surface-distinct scenarios that probe the same meta-skill",
+      "microtopicIds": ["lp-service-desk", "lp-onboarding-review"],
+      "equivalenceMetadata": {
+        "rationale": "Both microtopics ask the learner to distinguish current performance from durable learning and to design the weakest stronger test. They differ only in surface setting and context cues.",
+        "sourceHashes": [
+          "2172bfa496248f59c76fb0571d6287eb3a2d4f6b675e2f0b6d8982123133cc68",
+          "195ecbd50429fad2e3495c648c890b674e417a63c319b342954f6f9261014ff2"
+        ],
+        "matchingDimensions": ["same capability", "same rubric", "different surface setting", "different immediate cues"]
+      }
+    }
+  ],
+  "microtopics": [
+    {
+      "microtopicId": "lp-service-desk",
+      "title": "Служба поддержки: не перепутать помощь и обучение",
+      "goalContract": "По описанию учебной ситуации ученик различает временно хороший результат и устойчивое обучение, замечает мешающие факторы и предлагает минимальную чистую проверку через самостоятельную попытку, перенос или отсроченную проверку.",
+      "rubric": [
+        { "id": "LP_DISTINCTION", "description": "Различение текущего выполнения и устойчивой способности позднее или в изменённых условиях" },
+        { "id": "CONFOUND_DETECTION", "description": "Выявление подсказок, повторения, открытого источника и знакомости формы" },
+        { "id": "EVIDENCE_DESIGN", "description": "Проектирование чистой самостоятельной попытки и сильного свидетельства обучения" },
+        { "id": "ADAPTIVE_DECISION", "description": "Выбор следующего шага на основании evidence/gap" }
+      ]
+    },
+    {
+      "microtopicId": "lp-onboarding-review",
+      "title": "Онбординг команды: оценка устойчивости знания",
+      "goalContract": "По описанию учебной ситуации ученик различает временный успех на знакомом шаблоне и долговременное обучение, находит искажающие факторы и предлагает минимальную проверку с переносом или отсрочкой.",
+      "rubric": [
+        { "id": "LP_DISTINCTION", "description": "Различение текущего выполнения и устойчивой способности позднее или в изменённых условиях" },
+        { "id": "CONFOUND_DETECTION", "description": "Выявление подсказок, повторения, открытого источника и знакомости формы" },
+        { "id": "EVIDENCE_DESIGN", "description": "Проектирование чистой самостоятельной попытки и сильного свидетельства обучения" },
+        { "id": "ADAPTIVE_DECISION", "description": "Выбор следующего шага на основании evidence/gap" }
+      ]
+    }
+  ],
+  "rubric": [
+    { "id": "LP_DISTINCTION", "description": "Различает немедленный результат и устойчивую способность позже или в изменённых условиях" },
+    { "id": "CONFOUND_DETECTION", "description": "Замечает подсказки, повторение, открытый источник и знакомый шаблон как искажающие факторы" },
+    { "id": "EVIDENCE_DESIGN", "description": "Проектирует чистую самостоятельную попытку и сильное свидетельство обучения" },
+    { "id": "ADAPTIVE_DECISION", "description": "Выбирает следующий шаг на основании evidence/gap" }
+  ],
+  "pretestForm": {
+    "formId": "lp-pretest-v1",
+    "title": "Чистый pretest",
+    "prompt": "Новый сотрудник в службе поддержки за 10 минут после примера и открытой памятки правильно отвечает на одинаковые вопросы. Достаточно ли этого, чтобы утверждать, что он уже научился? Какие детали мешают сделать такой вывод, и какой самый минимальный следующий тест ты бы назначил?",
+    "artifactType": "text"
+  },
+  "immediateForm": {
+    "formId": "lp-immediate-v1",
+    "title": "Immediate retrieval",
+    "prompt": "После короткого объяснения менеджер сразу даёт похожую задачу, и ученик справляется. Объясни, почему это ещё не обязательно доказывает обучение, и примените это к сценарию: что именно здесь может искусственно завысить результат?",
+    "artifactType": "text"
+  },
+  "transferForm": {
+    "formId": "lp-transfer-v1",
+    "title": "Transfer test",
+    "prompt": "Младший юрист после образца договора успешно разбирает почти такой же кейс, но с изменённым фактом. Что должно быть в проверке, чтобы это стало более сильным свидетельством обучения, а не просто узнавания шаблона?",
+    "artifactType": "text"
+  },
+  "delayedForm": {
+    "formId": "lp-delayed-v1",
+    "title": "Delayed retrieval",
+    "prompt": "Через два дня специалист снова хорошо отвечает на похожий вопрос без подсказок. Как ты решишь, стало ли это свидетельством обучения, и какой следующий минимальный тест всё ещё нужен, если вывод пока слабый?",
+    "artifactType": "text"
+  },
+  "equivalenceMetadata": {
+    "rationale": "Calibration/usability pilot only; the matched set deliberately holds the meta-skill constant while changing the surface context.",
+    "sourceHashes": [
+      "2172bfa496248f59c76fb0571d6287eb3a2d4f6b675e2f0b6d8982123133cc68",
+      "195ecbd50429fad2e3495c648c890b674e417a63c319b342954f6f9261014ff2"
+    ]
+  },
+  "scoringMaterials": {
+    "scoringGuidance": "Используй только immutable task snapshot, learner artifact и rubric; положительное решение требует буквальной опоры на текст ответа.",
+    "referenceAnswer": "Performance — это наблюдаемый успех сейчас; learning требует чистого воспроизведения позже или переноса в изменённые условия.",
+    "disagreementPolicy": "При расхождении scorers сохранить обе версии и считать критерий unknown до независимого разрешения."
+  },
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "metadata": {
+    "schemaVersion": 1,
+    "createdBy": "local-authoring",
+    "classification": "calibration-only",
+    "author": "local-authoring",
+    "reviewer": "pending-domain-review",
+    "changeHistory": ["v1 initial calibration/usability pack"],
+    "notes": "Calibration/usability pilot only; exclude from efficacy comparison."
+  }
+}

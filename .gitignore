@@ -6,6 +6,7 @@ dist/
 .study-engine/*.sqlite
 .study-engine/*.sqlite3
 .study-engine/*.db
+.study-engine/*.sqlite-*
 .study-engine/tape.json
 .study-engine/config.local.json
 
@@ -17,6 +18,7 @@ latest_screenshot.*
 latest_transcription.json
 runs/
 derived-runs/
+graphify-out/
 
 # --- models / binaries (user installs separately) ---
 *.gguf
