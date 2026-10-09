@@ -1,5 +1,7 @@
 # AI Study Engine
 
+![ai-study-engine](assets/cover.jpg)
+
 > An experimental, local-first learning system that separates **AI assistance**
 > from **evidence of actual learner understanding**.
 
